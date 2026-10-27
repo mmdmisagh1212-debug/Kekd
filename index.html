@@ -1,1 +1,176 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WireGuard4582</title>
+<style>
+*{box-sizing:border-box}
+body{
+margin:0;
+font-family:Tahoma,Arial,sans-serif;
+background:linear-gradient(135deg,#080b20,#21104a,#082c50);
+color:white;
+min-height:100vh;
+padding:20px;
+}
+.container{max-width:650px;margin:auto}
+header{text-align:center;padding:25px 10px}
+.logo{
+width:75px;height:75px;margin:auto auto 15px;
+border-radius:23px;
+display:grid;place-items:center;
+font-size:38px;font-weight:bold;
+background:linear-gradient(135deg,#9333ea,#38bdf8);
+box-shadow:0 0 30px #7c3aed55;
+}
+h1{font-size:27px;margin:10px 0}
+header p{color:#b9c4ef;font-size:13px}
+.card{
+background:#11152bea;
+border:1px solid #454078;
+border-radius:20px;
+padding:22px;margin-bottom:18px;
+box-shadow:0 12px 35px #0004;
+}
+h2{font-size:18px;margin:0 0 20px}
+label{display:block;font-size:13px;margin:16px 0 8px;color:#d8d8ff}
+input{
+width:100%;padding:13px;
+border-radius:11px;
+border:1px solid #454578;
+background:#090e22;color:white;
+font-size:14px;outline:none;
+}
+input:focus{border-color:#38bdf8}
+input[type=file]{font-size:12px}
+button{
+width:100%;padding:14px;
+margin-top:18px;border:0;border-radius:12px;
+background:linear-gradient(100deg,#9333ea,#4263eb,#0ea5e9);
+color:white;font-size:15px;font-weight:bold;
+cursor:pointer;
+}
+button:active{transform:scale(.99)}
+#status{
+display:none;margin-top:15px;padding:13px;
+border-radius:10px;background:#17213a;
+font-size:12px;line-height:2;overflow-wrap:anywhere;
+}
+#download{display:none;background:linear-gradient(100deg,#059669,#0d9488)}
+.note{font-size:11px;line-height:2;color:#aeb9dc;margin-top:14px}
+footer{text-align:center;color:#888bb6;font-size:11px;padding:15px}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+<div class="logo">WG</div>
+<h1>WireGuard4582</h1>
+<p>پنل ساخت و مدیریت فایل وایرگارد</p>
+</header>
 
+<div class="card">
+<h2>⚡ ساخت خروجی وایرگارد</h2>
+
+<label for="config">فایل کانفیگ وایرگارد</label>
+<input id="config" type="file" accept=".conf,.txt">
+
+<label for="name">نام کانفیگ</label>
+<input id="name" type="text" placeholder="نام کانفیگ را وارد کن">
+
+<label for="volume">حجم (GB)</label>
+<input id="volume" type="number" min="1" value="4">
+
+<label for="days">مدت اعتبار (روز)</label>
+<input id="days" type="number" min="1" value="30">
+
+<label for="users">تعداد کاربران</label>
+<input id="users" type="number" min="1" value="1">
+
+<button onclick="buildConfig()">ساخت کانفیگ</button>
+<div id="status"></div>
+<button id="download" onclick="downloadConfig()">دانلود فایل وایرگارد</button>
+
+<p class="note">
+این نسخه فایل کانفیگ موجود را آماده دانلود می‌کند. برای تولید کلید و Peer جدید، اعمال محدودیت حجم و اعتبار و ساخت لینک ساب واقعی، اتصال به سرور و API وایرگارد لازم است.
+</p>
+</div>
+<footer>WireGuard4582</footer>
+</div>
+
+<script>
+let outputContent="";
+let outputName="WireGuard.conf";
+
+function buildConfig(){
+const file=document.getElementById("config").files[0];
+const name=document.getElementById("name").value.trim();
+const volume=Number(document.getElementById("volume").value);
+const days=Number(document.getElementById("days").value);
+const users=Number(document.getElementById("users").value);
+const status=document.getElementById("status");
+const download=document.getElementById("download");
+
+status.style.display="block";
+download.style.display="none";
+outputContent="";
+
+if(!file){
+status.textContent="ابتدا فایل کانفیگ وایرگارد را انتخاب کن.";
+return;
+}
+if(volume<1||days<1||users<1){
+status.textContent="حجم، اعتبار و تعداد کاربران باید بیشتر از صفر باشند.";
+return;
+}
+
+const reader=new FileReader();
+
+reader.onload=function(e){
+const content=String(e.target.result||"");
+
+if(!content.includes("[Interface]")){
+status.textContent="فایل انتخاب‌شده کانفیگ معتبر WireGuard به نظر نمی‌رسد.";
+return;
+}
+
+outputContent=content;
+outputName=(name||file.name.replace(/\.conf$/i,""))+".conf";
+
+status.textContent=
+"فایل آماده دانلود شد.\n"+
+"نام: "+(name||file.name)+"\n"+
+"حجم تنظیم‌شده: "+volume+" گیگابایت\n"+
+"اعتبار تنظیم‌شده: "+days+" روز\n"+
+"تعداد کاربران تنظیم‌شده: "+users+
+"\nتوجه: این تنظیمات نمایشی هستند و روی سرور اعمال نشده‌اند.";
+
+download.style.display="block";
+};
+
+reader.onerror=function(){
+status.textContent="خواندن فایل ناموفق بود.";
+};
+
+reader.readAsText(file);
+}
+
+function downloadConfig(){
+if(!outputContent)return;
+
+const blob=new Blob([outputContent],{type:"application/octet-stream"});
+const url=URL.createObjectURL(blob);
+const a=document.createElement("a");
+
+a.href=url;
+a.download=outputName;
+document.body.appendChild(a);
+a.click();
+a.remove();
+
+setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+</script>
+</body>
+  </html>
